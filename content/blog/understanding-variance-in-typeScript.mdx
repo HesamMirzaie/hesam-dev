@@ -1,0 +1,1234 @@
+---
+
+title: "Understanding Variance in TypeScript: Covariance, Contravariance, Invariance, and Bivariance"
+description: "A deep technical explanation of variance in TypeScript, including covariance, contravariance, invariance, bivariance, function compatibility, and generic API design."
+publishedAt: 2026-08-11
+tags:
+  - typescript
+  - type-system
+  - generics
+  - software-engineering
+
+---
+
+# Understanding Variance in TypeScript
+
+Variance is one of those type-system concepts that often feels unnecessarily abstract until you encounter a generic API where an apparently obvious assignment is rejected—or, more dangerously, accepted when it should not be.
+
+At its core, variance answers a simple question:
+
+> If `Dog` is a subtype of `Animal`, what relationship, if any, exists between `Container<Dog>` and `Container<Animal>`?
+
+The important point is that the relationship between `Dog` and `Animal` does **not automatically determine** the relationship between generic types constructed from them.
+
+Depending on how a generic type uses its type parameter, the relationship may be preserved, reversed, eliminated, or—in some TypeScript-specific situations—accepted in both directions.
+
+These behaviors are called:
+
+* **Covariance**
+* **Contravariance**
+* **Invariance**
+* **Bivariance**
+
+Understanding them is especially important when designing generic libraries, callback APIs, repositories, event systems, immutable data structures, and other abstractions where values move across type boundaries.
+
+---
+
+## Start With Subtyping
+
+Suppose we have a basic hierarchy:
+
+```ts
+class Animal {
+  name = "";
+}
+
+class Dog extends Animal {
+  bark() {}
+}
+
+class Cat extends Animal {
+  meow() {}
+}
+```
+
+Because every `Dog` is an `Animal`, this assignment is valid:
+
+```ts
+const dog = new Dog();
+
+const animal: Animal = dog;
+```
+
+In type-theory notation:
+
+```text
+Dog <: Animal
+```
+
+This means:
+
+> `Dog` is a subtype of `Animal`.
+
+Now introduce a generic type:
+
+```ts
+Container<T>
+```
+
+The interesting question becomes:
+
+```text
+Dog <: Animal
+```
+
+Does that imply:
+
+```text
+Container<Dog> <: Container<Animal>
+```
+
+Not necessarily.
+
+We cannot answer that question until we know what `Container<T>` does with `T`.
+
+Does it return `T`?
+
+Does it accept `T`?
+
+Does it do both?
+
+That is exactly what variance describes.
+
+---
+
+## Covariance: Preserving the Relationship
+
+A generic type is **covariant** when it preserves the subtype relationship.
+
+If:
+
+```text
+Dog <: Animal
+```
+
+then covariance gives us:
+
+```text
+Producer<Dog> <: Producer<Animal>
+```
+
+Consider a producer:
+
+```ts
+interface Producer<T> {
+  get(): T;
+}
+```
+
+It only gives values to the outside world.
+
+Now imagine:
+
+```ts
+declare const dogProducer: Producer<Dog>;
+
+const animalProducer: Producer<Animal> = dogProducer;
+```
+
+Why is this safe?
+
+The caller expects:
+
+```ts
+const animal = animalProducer.get();
+```
+
+The underlying producer returns a `Dog`.
+
+But this is valid because every `Dog` is an `Animal`.
+
+The producer promises an `Animal`; returning something more specific does not violate that promise.
+
+A useful mental model is:
+
+> **Outputs tend toward covariance.**
+
+If a generic parameter appears only in positions where values leave an abstraction, covariance is usually safe.
+
+---
+
+## Read-Only Containers Are Naturally Covariant
+
+The same reasoning applies to immutable containers.
+
+Consider:
+
+```ts
+interface ReadonlyBox<T> {
+  get(): T;
+}
+```
+
+Given:
+
+```ts
+declare const dogs: ReadonlyBox<Dog>;
+
+const animals: ReadonlyBox<Animal> = dogs;
+```
+
+There is no way to corrupt the underlying `ReadonlyBox<Dog>`.
+
+The only available operation is reading:
+
+```ts
+const animal = animals.get();
+```
+
+The returned object is actually a `Dog`, but a `Dog` is still a valid `Animal`.
+
+This explains why immutable data structures interact naturally with covariance.
+
+TypeScript's `ReadonlyArray<T>` is a familiar example:
+
+```ts
+const dogs: ReadonlyArray<Dog> = [
+  new Dog(),
+];
+
+const animals: ReadonlyArray<Animal> = dogs;
+```
+
+Reading is safe:
+
+```ts
+const animal: Animal = animals[0];
+```
+
+The dangerous operation—writing an arbitrary `Animal` into the original dog collection—is unavailable.
+
+This is more than a convenience of immutable APIs.
+
+Immutability removes an entire category of type-safety problems because it eliminates consumer positions.
+
+---
+
+## Why Mutation Changes Everything
+
+Now suppose our box supports writing:
+
+```ts
+interface Box<T> {
+  get(): T;
+  set(value: T): void;
+}
+```
+
+Imagine treating a `Box<Dog>` as a `Box<Animal>`:
+
+```ts
+declare const dogBox: Box<Dog>;
+
+const animalBox: Box<Animal> = dogBox;
+```
+
+At first, reading still appears safe:
+
+```ts
+const animal = animalBox.get();
+```
+
+But the `Box<Animal>` contract also allows this:
+
+```ts
+animalBox.set(new Cat());
+```
+
+We have now inserted a `Cat` into an object whose original type promised:
+
+```ts
+Box<Dog>
+```
+
+Later:
+
+```ts
+const dog = dogBox.get();
+
+dog.bark();
+```
+
+The static type says `Dog`.
+
+The runtime value could now be a `Cat`.
+
+The abstraction has been corrupted.
+
+This is the central reason mutation complicates variance.
+
+`T` appears in two fundamentally different positions.
+
+This:
+
+```ts
+get(): T;
+```
+
+produces `T`.
+
+This:
+
+```ts
+set(value: T): void;
+```
+
+consumes `T`.
+
+The first pushes us toward covariance.
+
+The second pushes us toward contravariance.
+
+When both requirements exist simultaneously, neither direction of substitution is generally safe.
+
+Conceptually, this produces **invariance**.
+
+---
+
+## Contravariance: Reversing the Relationship
+
+Covariance is relatively intuitive because it follows the original subtype hierarchy.
+
+Contravariance is more subtle because it reverses that hierarchy.
+
+Suppose:
+
+```text
+Dog <: Animal
+```
+
+For a contravariant type:
+
+```text
+Consumer<Animal> <: Consumer<Dog>
+```
+
+Why does the relationship reverse?
+
+Consider:
+
+```ts
+type Consumer<T> = (value: T) => void;
+```
+
+Now define:
+
+```ts
+const consumeAnimal = (animal: Animal) => {
+  console.log(animal.name);
+};
+```
+
+A system needs something capable of consuming dogs:
+
+```ts
+let consumeDog: (dog: Dog) => void;
+```
+
+Can we assign `consumeAnimal`?
+
+```ts
+consumeDog = consumeAnimal;
+```
+
+Yes.
+
+Anything passed to `consumeDog` must be a `Dog`.
+
+Every `Dog` is also an `Animal`.
+
+Therefore, a function capable of processing **every Animal** is certainly capable of processing Dogs.
+
+Notice the reversal:
+
+```text
+Dog <: Animal
+```
+
+but:
+
+```text
+Consumer<Animal> <: Consumer<Dog>
+```
+
+That is contravariance.
+
+---
+
+## Why the Opposite Direction Is Unsafe
+
+Now consider a dog-specific handler:
+
+```ts
+const handleDog = (dog: Dog) => {
+  dog.bark();
+};
+```
+
+Suppose we could treat it as an animal handler:
+
+```ts
+const handleAnimal: (animal: Animal) => void =
+  handleDog;
+```
+
+A caller sees:
+
+```ts
+(animal: Animal) => void
+```
+
+so the caller is allowed to do this:
+
+```ts
+handleAnimal(new Cat());
+```
+
+But the underlying function executes:
+
+```ts
+dog.bark();
+```
+
+A `Cat` has no `bark()` method.
+
+The assignment allowed the caller to provide a value outside the domain supported by the function.
+
+This gives us another important mental model:
+
+> **Inputs tend toward contravariance.**
+
+A function that accepts a broader domain is more reusable as a consumer than one accepting a narrower domain.
+
+This becomes easier to understand if you think in terms of promises rather than inheritance.
+
+If I ask for:
+
+```ts
+(dog: Dog) => void
+```
+
+I am promising that I will only give you dogs.
+
+A function accepting:
+
+```ts
+(animal: Animal) => void
+```
+
+is perfectly happy with that promise.
+
+But if I ask for:
+
+```ts
+(animal: Animal) => void
+```
+
+I reserve the right to pass dogs, cats, birds, or any other animal.
+
+A dog-only function cannot satisfy that contract.
+
+---
+
+## Function Types Reveal Variance Clearly
+
+Function types are one of the cleanest places to see covariance and contravariance at the same time.
+
+Consider:
+
+```ts
+type Fn<A, R> = (arg: A) => R;
+```
+
+There are two generic parameters.
+
+`A` is an input.
+
+`R` is an output.
+
+Therefore:
+
+```text
+A → contravariant
+R → covariant
+```
+
+Suppose:
+
+```ts
+class Animal {}
+
+class Dog extends Animal {}
+```
+
+A function:
+
+```ts
+(animal: Animal) => Dog
+```
+
+can safely substitute for:
+
+```ts
+(dog: Dog) => Animal
+```
+
+Why?
+
+The input is broader:
+
+```text
+Animal
+```
+
+so it can certainly accept the `Dog` values the caller will provide.
+
+The output is narrower:
+
+```text
+Dog
+```
+
+so it satisfies the caller's expectation of receiving an `Animal`.
+
+This gives us an extremely useful rule:
+
+```text
+inputs  → contravariant
+outputs → covariant
+```
+
+Once this becomes intuitive, many generic compatibility errors become significantly easier to reason about.
+
+---
+
+## Invariance: When Neither Direction Is Safe
+
+A generic type is **invariant** when subtype relationships between its type arguments do not produce subtype relationships between the constructed generic types.
+
+Conceptually:
+
+```text
+Dog <: Animal
+```
+
+does not imply either:
+
+```text
+Box<Dog> <: Box<Animal>
+```
+
+or:
+
+```text
+Box<Animal> <: Box<Dog>
+```
+
+A common reason is that the type both consumes and produces `T`.
+
+For example:
+
+```ts
+interface Storage<T> {
+  read(): T;
+  write(value: T): void;
+}
+```
+
+`read()` wants covariance.
+
+`write()` wants contravariance.
+
+Together, they require stricter compatibility.
+
+This pattern appears frequently in real applications.
+
+Consider a repository:
+
+```ts
+interface Repository<T> {
+  findById(id: string): T;
+  save(entity: T): void;
+}
+```
+
+The repository produces entities:
+
+```ts
+findById(): T
+```
+
+but also consumes them:
+
+```ts
+save(entity: T): void
+```
+
+Treating a `Repository<Dog>` as a `Repository<Animal>` could allow someone to save a `Cat`.
+
+Treating a `Repository<Animal>` as a `Repository<Dog>` could allow `findById()` to return a `Cat` where the caller expects a `Dog`.
+
+Neither substitution is generally sound.
+
+This is why mutable, stateful abstractions frequently behave invariantly from a type-theory perspective.
+
+---
+
+## Producer and Consumer Is the Better Mental Model
+
+Variance becomes much easier when you stop memorizing terminology and instead ask:
+
+> Where does `T` flow?
+
+Consider:
+
+```ts
+interface Something<T> {
+  // ...
+}
+```
+
+Look at every place where `T` appears.
+
+If values of `T` only flow **out**:
+
+```ts
+interface Producer<T> {
+  get(): T;
+}
+```
+
+think:
+
+```text
+output
+↓
+covariance
+```
+
+If values of `T` only flow **in**:
+
+```ts
+interface Consumer<T> {
+  consume(value: T): void;
+}
+```
+
+think:
+
+```text
+input
+↓
+contravariance
+```
+
+If values flow in both directions:
+
+```ts
+interface MutableContainer<T> {
+  get(): T;
+  set(value: T): void;
+}
+```
+
+think:
+
+```text
+input + output
+↓
+invariance
+```
+
+This producer/consumer model scales much better than memorizing individual language rules.
+
+It also connects variance directly to API design.
+
+---
+
+## Bivariance: Allowing Both Directions
+
+There is one more possibility: **bivariance**.
+
+A bivariant position accepts compatibility in both directions.
+
+Conceptually, both of these may be accepted:
+
+```text
+Handler<Dog> → Handler<Animal>
+Handler<Animal> → Handler<Dog>
+```
+
+This is more permissive than covariance or contravariance.
+
+It is also potentially unsound.
+
+TypeScript historically allows bivariance in certain method and callback-related situations for compatibility with JavaScript patterns.
+
+This is important because TypeScript does not exist in the same environment as languages whose type systems were designed before their ecosystems.
+
+JavaScript existed first.
+
+TypeScript had to introduce stronger static guarantees while remaining compatible with enormous amounts of existing JavaScript code.
+
+As a result, there are places where TypeScript deliberately prioritizes ecosystem compatibility and ergonomics over complete theoretical soundness.
+
+Bivariance is one example.
+
+When designing new APIs, it is usually better not to depend on bivariant behavior.
+
+Prefer APIs whose input and output relationships are explicit enough for the compiler to enforce safely.
+
+---
+
+## `strictFunctionTypes` in TypeScript
+
+Function parameter variance deserves special attention in TypeScript.
+
+With:
+
+```json
+{
+  "compilerOptions": {
+    "strictFunctionTypes": true
+  }
+}
+```
+
+TypeScript checks many function parameter positions more strictly and prevents unsafe assignments.
+
+Consider:
+
+```ts
+class Animal {}
+
+class Dog extends Animal {
+  bark() {}
+}
+
+class Cat extends Animal {
+  meow() {}
+}
+
+const handleDog = (dog: Dog) => {
+  dog.bark();
+};
+
+let handleAnimal: (animal: Animal) => void;
+```
+
+Assigning:
+
+```ts
+handleAnimal = handleDog;
+```
+
+is dangerous because a caller could later execute:
+
+```ts
+handleAnimal(new Cat());
+```
+
+The dog-specific function cannot safely handle that value.
+
+`strictFunctionTypes` helps catch exactly this category of mistake.
+
+There are nuances around method syntax and TypeScript's historical bivariance behavior, so it is inaccurate to reduce TypeScript's actual rules to:
+
+> Function parameters are always contravariant.
+
+A better engineering model is:
+
+> Function parameters are fundamentally contravariant from a type-safety perspective, while TypeScript contains specific compatibility exceptions.
+
+That distinction matters when reading sophisticated library definitions.
+
+---
+
+## Variance Is About Information Flow
+
+There is a deeper way to understand all of this.
+
+Variance is fundamentally related to the direction in which typed information crosses an abstraction boundary.
+
+```text
+             API Boundary
+
+Caller  --------------------> Component
+             input T
+
+Caller  <-------------------- Component
+             output T
+```
+
+When `T` moves outward, returning something more specific is safe.
+
+That creates covariance.
+
+When `T` moves inward, accepting something more general is safe.
+
+That creates contravariance.
+
+When `T` moves in both directions, both constraints must hold.
+
+That commonly leads to invariance.
+
+This is why variance appears throughout type theory rather than being a special feature invented for generics.
+
+It follows naturally from substitution safety.
+
+---
+
+## Variance and the Liskov Substitution Principle
+
+Variance is closely connected to the **Liskov Substitution Principle**.
+
+Informally, LSP says that if `S` is a subtype of `T`, objects of `S` should be usable wherever objects of `T` are expected without violating program correctness.
+
+Variance asks what happens to that substitution relationship after applying a type constructor.
+
+Given:
+
+```text
+Dog <: Animal
+```
+
+a generic constructor:
+
+```text
+F<T>
+```
+
+creates a new question:
+
+```text
+What relationship exists between F<Dog> and F<Animal>?
+```
+
+Covariance preserves the relationship:
+
+```text
+Dog <: Animal
+
+F<Dog> <: F<Animal>
+```
+
+Contravariance reverses it:
+
+```text
+Dog <: Animal
+
+F<Animal> <: F<Dog>
+```
+
+Invariance removes the relationship:
+
+```text
+Dog <: Animal
+
+F<Dog> and F<Animal>
+have no safe subtype relationship
+```
+
+Thinking of generic types as **type transformations** is useful when moving into more advanced topics such as functional programming, higher-kinded types, and sophisticated generic library design.
+
+---
+
+## A Practical Example: Event Systems
+
+Consider an event hierarchy:
+
+```ts
+interface AppEvent {
+  timestamp: number;
+}
+
+interface UserCreatedEvent extends AppEvent {
+  userId: string;
+}
+```
+
+Suppose an event dispatcher uses:
+
+```ts
+type Handler<T> = (event: T) => void;
+```
+
+A general logging handler might be:
+
+```ts
+const logEvent = (event: AppEvent) => {
+  console.log(event.timestamp);
+};
+```
+
+It can safely serve as a handler for `UserCreatedEvent`:
+
+```ts
+const userCreatedHandler: Handler<UserCreatedEvent> =
+  logEvent;
+```
+
+The event system promises to provide `UserCreatedEvent`.
+
+`logEvent` requires only `AppEvent`.
+
+Since every `UserCreatedEvent` satisfies the `AppEvent` contract, the substitution is safe.
+
+Now reverse it:
+
+```ts
+const handleUserCreated = (
+  event: UserCreatedEvent,
+) => {
+  console.log(event.userId);
+};
+```
+
+It cannot safely become:
+
+```ts
+Handler<AppEvent>
+```
+
+because the dispatcher might provide another kind of application event that does not contain `userId`.
+
+This is contravariance appearing in an ordinary production architecture rather than an academic example.
+
+The same reasoning applies to:
+
+* event listeners
+* middleware
+* validators
+* serializers
+* request handlers
+* dependency injection
+* message consumers
+* command handlers
+* stream processors
+
+---
+
+## API Design Implications
+
+Variance is not merely something to understand when the compiler produces an error.
+
+It can influence how you structure an API.
+
+Suppose you initially design:
+
+```ts
+interface DataSource<T> {
+  read(): T;
+  write(value: T): void;
+}
+```
+
+This tightly couples reading and writing.
+
+Because `T` crosses the boundary in both directions, substitution becomes more restrictive.
+
+Sometimes separating responsibilities creates more flexible types:
+
+```ts
+interface Reader<T> {
+  read(): T;
+}
+
+interface Writer<T> {
+  write(value: T): void;
+}
+```
+
+Now the variance relationships are clearer:
+
+```text
+Reader<T>
+→ producer
+→ covariance
+```
+
+and:
+
+```text
+Writer<T>
+→ consumer
+→ contravariance
+```
+
+This is one reason separating read and write capabilities can improve more than architectural cleanliness.
+
+It can also improve the expressive power of the type system.
+
+Large typed codebases often benefit from capability-oriented interfaces because smaller interfaces expose clearer variance properties.
+
+---
+
+## Why Immutable APIs Compose Better
+
+Variance also reveals one of the deeper advantages of immutability.
+
+A mutable collection:
+
+```ts
+MutableCollection<T>
+```
+
+both reads and writes `T`.
+
+That introduces competing variance requirements.
+
+A read-only view:
+
+```ts
+ReadonlyCollection<T>
+```
+
+only exposes values.
+
+The type system can therefore permit more substitutions without sacrificing safety.
+
+Immutability provides two distinct benefits:
+
+1. Runtime reasoning becomes simpler because state cannot unexpectedly change.
+2. Static reasoning becomes more flexible because producer-only abstractions can safely support covariance.
+
+This connection between immutability and variance is one reason immutable data structures appear so frequently in strongly typed functional programming.
+
+---
+
+## Common Misconceptions
+
+### If `Dog` extends `Animal`, then `Something<Dog>` extends `Something<Animal>`
+
+Not necessarily.
+
+You must inspect how `Something<T>` uses `T`.
+
+The subtype relationship between type arguments alone is insufficient.
+
+### Generics are covariant by default
+
+There is no universally correct default.
+
+Variance depends on how the generic parameter participates in the abstraction and on the rules of the language's type system.
+
+### Inheritance and covariance are the same thing
+
+They are related, but fundamentally different concepts.
+
+Inheritance may establish:
+
+```text
+Dog <: Animal
+```
+
+Variance determines how another type constructor behaves with that relationship:
+
+```text
+F<Dog> ? F<Animal>
+```
+
+### Function parameters should be covariant because `Dog` extends `Animal`
+
+This is backwards.
+
+Parameters are inputs.
+
+A function accepting a broader input is safer to substitute for one requiring a narrower input.
+
+Parameter positions are therefore naturally contravariant.
+
+### `readonly` is only about preventing accidental mutation
+
+Readonly types can also affect substitutability.
+
+Removing mutation can transform an abstraction from one with competing input/output requirements into a producer-only abstraction where covariance becomes safe.
+
+---
+
+## A Compact Mental Model
+
+When examining:
+
+```ts
+Generic<T>
+```
+
+ask one question:
+
+> **Where does `T` flow?**
+
+If it flows out:
+
+```ts
+get(): T;
+```
+
+think:
+
+```text
+Producer
+↓
+Covariance
+```
+
+If it flows in:
+
+```ts
+set(value: T): void;
+```
+
+think:
+
+```text
+Consumer
+↓
+Contravariance
+```
+
+If it flows both ways:
+
+```ts
+get(): T;
+set(value: T): void;
+```
+
+think:
+
+```text
+Producer + Consumer
+↓
+Invariance
+```
+
+If the language permits compatibility in both directions despite the theoretical constraints:
+
+```text
+Bivariance
+```
+
+A compact summary:
+
+```text
+Dog <: Animal
+
+
+Covariance
+
+Producer<Dog> <: Producer<Animal>
+
+
+Contravariance
+
+Consumer<Animal> <: Consumer<Dog>
+
+
+Invariance
+
+Container<Dog> ↛ Container<Animal>
+
+Container<Animal> ↛ Container<Dog>
+
+
+Bivariance
+
+Both directions may be accepted
+```
+
+But the more durable rule is simpler:
+
+> **Outputs can safely become more specific. Inputs can safely become more general.**
+
+---
+
+## Interview Question
+
+### Why is a read-only container usually covariant while a mutable container is invariant?
+
+A read-only container only produces values.
+
+Therefore, treating:
+
+```ts
+ReadonlyBox<Dog>
+```
+
+as:
+
+```ts
+ReadonlyBox<Animal>
+```
+
+is safe because every value returned by the original container is a `Dog`, and every `Dog` is also an `Animal`.
+
+A mutable container is different because it both produces and consumes values.
+
+If:
+
+```ts
+Box<Dog>
+```
+
+could safely be treated as:
+
+```ts
+Box<Animal>
+```
+
+then code using the `Box<Animal>` reference could insert a `Cat`.
+
+The original object would still be statically typed as `Box<Dog>`, even though it now contains a `Cat`.
+
+That breaks the type's guarantee.
+
+Therefore mutable containers generally require invariant reasoning.
+
+---
+
+## Final Perspective
+
+Variance is ultimately about preserving the guarantees made by types.
+
+A producer promises what it will give you.
+
+Returning something more specific than promised is safe, which leads to **covariance**.
+
+A consumer declares what it can accept.
+
+Accepting more possibilities than required is safe, which leads to **contravariance**.
+
+An abstraction that both consumes and produces the same type parameter must satisfy both constraints, which commonly leads to **invariance**.
+
+**Bivariance** relaxes those constraints and therefore trades some soundness for compatibility or convenience.
+
+Once variance is understood as a consequence of **subtyping, information flow, and substitution safety**, the terminology becomes much less mysterious.
+
+Instead of memorizing:
+
+```text
+covariant = same direction
+
+contravariant = opposite direction
+```
+
+look at the API boundary and ask:
+
+```text
+Who produces this value?
+
+Who consumes this value?
+
+What assumptions could substitution break?
+```
+
+Those questions lead directly to the correct variance relationship—and, more importantly, to safer generic API designs.
