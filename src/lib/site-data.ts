@@ -58,6 +58,14 @@ export const projects: Project[] = [
     href: "https://github.com/HesamMirzaie/realtime-seat-booking",
   },
   {
+    title: "Go todo app",
+    description:
+      "A basic todo app with go for learn Fiber http library and vuejs as a ui library.",
+    technologies: ["Go", "TypeScript", "Fiber", "Vue3"],
+    status: "Open source",
+    href: "https://github.com/HesamMirzaie/go-todo-app",
+  },
+  {
     title: "Enterprise CRM modules",
     description:
       "Core CRM workflows with multi-step, validated forms and real-time interface updates for an enterprise-scale platform.",
