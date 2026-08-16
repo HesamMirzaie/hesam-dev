@@ -37,18 +37,20 @@ export const skills = [
 ];
 export const projects: Project[] = [
   {
-    title: "Task Master",
+    title: "Enterprise CRM modules",
     description:
-      "A Trello-style task management app with authentication, protected routes, drag-and-drop boards, and cached server state.",
-    technologies: [
-      "React",
-      "TypeScript",
-      "TanStack Query",
-      "React Hook Form",
-      "shadcn/ui",
-    ],
-    status: "Open source",
-    href: "https://github.com/HesamMirzaie/trello-app",
+      "Core CRM workflows with multi-step, validated forms and real-time interface updates for an enterprise-scale platform.",
+    technologies: ["React", "TypeScript", "Vite", "React Query", "WebSocket"],
+    status: "PayamGostar",
+    href: "/projects",
+  },
+  {
+    title: "Plannerium frontend platform",
+    description:
+      "A pnpm and Turborepo monorepo with a shared UI library, authentication flows, Storybook, Docker, and CI/CD support.",
+    technologies: ["React", "Turborepo", "Tailwind CSS", "Storybook", "Docker"],
+    status: "Plannerium",
+    href: "/projects",
   },
   {
     title: "Realtime seat reservation",
@@ -66,20 +68,19 @@ export const projects: Project[] = [
     href: "https://github.com/HesamMirzaie/go-todo-app",
   },
   {
-    title: "Enterprise CRM modules",
+    title: "A multi-tenant booking system",
     description:
-      "Core CRM workflows with multi-step, validated forms and real-time interface updates for an enterprise-scale platform.",
-    technologies: ["React", "TypeScript", "Vite", "React Query", "WebSocket"],
-    status: "PayamGostar",
-    href: "/projects",
-  },
-  {
-    title: "Plannerium frontend platform",
-    description:
-      "A pnpm and Turborepo monorepo with a shared UI library, authentication flows, Storybook, Docker, and CI/CD support.",
-    technologies: ["React", "Turborepo", "Tailwind CSS", "Storybook", "Docker"],
-    status: "Plannerium",
-    href: "/projects",
+      "A multi-tenant booking system: users belong to organizations, book resources (rooms/equipment), with recurring bookings, approvals, waitlists, notifications, and audit logs.",
+    technologies: [
+      "Next.js",
+      "React 19",
+      "tRPC",
+      "Drizzle ORM",
+      "PostgreSQL",
+      "Zod",
+    ],
+    status: "Open source",
+    href: "https://github.com/HesamMirzaie/team-booking-app",
   },
 ];
 export const experience = [
