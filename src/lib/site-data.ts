@@ -16,7 +16,7 @@ export const siteConfig = {
   name: "Hesam Mirzaee",
   role: "Software Engineer",
   description:
-    "Software Engineer with 3+ years of experience building scalable web applications with React, TypeScript, and modern frontend architecture.",
+    "Frontend Engineer with 3+ years of experience building scalable web applications with React, TypeScript, and modern frontend architecture.",
   location: "Tehran, Iran",
   email: "Mirzaeeh08@gmail.com",
   phone: "09911461779",
