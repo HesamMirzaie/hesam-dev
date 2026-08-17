@@ -29,10 +29,10 @@ export function ThemeToggle() {
   }
 
   return (
-    <label className="flex items-center gap-2 text-muted-foreground">
-      <SunIcon aria-hidden="true" className="size-3.5" />
+    <label className="flex items-center gap-1.5 rounded-md border border-border/80 bg-background/60 px-2 py-1.5 text-muted-foreground">
+      <SunIcon aria-hidden="true" className="size-3" />
       <Switch checked={isDark} onCheckedChange={handleThemeChange} aria-label="Toggle dark mode" />
-      <MoonIcon aria-hidden="true" className="size-3.5" />
+      <MoonIcon aria-hidden="true" className="size-3" />
     </label>
   )
 }
