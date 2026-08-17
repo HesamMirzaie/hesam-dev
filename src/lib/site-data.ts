@@ -14,9 +14,9 @@ export type Education = {
 
 export const siteConfig = {
   name: "Hesam Mirzaee",
-  role: "Software Engineer",
+  role: "Frontend Engineer",
   description:
-    "Frontend Engineer with 3+ years of experience building scalable web applications with React, TypeScript, and modern frontend architecture.",
+    "Frontend Engineer with 3+ years of experience building and scaling production web applications with React and TypeScript. Experienced in frontend architecture, monorepo design, reusable component systems, complex API integrations, and real-time applications.",
   location: "Tehran, Iran",
   email: "Mirzaeeh08@gmail.com",
   phone: "09911461779",
@@ -27,13 +27,18 @@ export const siteConfig = {
 };
 
 export const skills = [
-  "React",
-  "TypeScript",
-  "Next.js",
-  "REST APIs",
-  "WebSocket",
-  "Docker",
-  "Azure DevOps",
+  "React & modern frontend development",
+  "JavaScript (ES6+) & TypeScript",
+  "Monorepo architecture & dependency management",
+  "Clean Code, SOLID & code review",
+  "CI/CD & deployment workflows",
+  "SSR & SEO",
+  "Frontend architecture & component design",
+  "Performance optimization & debugging",
+  "Responsive & semantic web development",
+  "REST API & real-time communication",
+  "Accessibility & automated testing",
+  "Problem solving & technical ownership",
 ];
 export const projects: Project[] = [
   {
@@ -85,25 +90,18 @@ export const projects: Project[] = [
 ];
 export const experience = [
   {
-    period: "2026 - Present",
-    role: "Frontend Engineer (Part-time)",
-    company: "Plannerium",
-    summary:
-      "Own frontend architecture and standards; built a Turborepo monorepo, shared UI library, authentication flows, Storybook, Docker configuration, and CI/CD support.",
-  },
-  {
     period: "2024 - Present",
     role: "Frontend Engineer",
     company: "PayamGostar",
     summary:
-      "Develop and maintain enterprise CRM modules, including complex form workflows, SignalR-powered real-time updates, performance improvements, code reviews, and Azure DevOps release support.",
+      "Develop and maintain enterprise CRM and fintech products, led the migration of 10+ frontend applications to Turborepo, built an AI platform dashboard, and improved delivery reliability through Azure DevOps pipelines and automated quality checks.",
   },
   {
-    period: "4-month bootcamp",
-    role: "Frontend Intern",
-    company: "Digi-Next",
+    period: "2025 - Present",
+    role: "Frontend Engineer (Part-time)",
+    company: "Plannerium",
     summary:
-      "Completed intensive React and TypeScript training with hands-on projects focused on component architecture, state management, and frontend performance.",
+      "Own frontend architecture and engineering standards; built a Turborepo monorepo, reusable component system, end-to-end authentication, automated tests, Docker deployment, Storybook, and CI/CD workflows.",
   },
 ];
 export const education: Education[] = [

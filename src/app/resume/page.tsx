@@ -8,7 +8,7 @@ export default function ResumePage() {
     <main className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-8 sm:py-24 lg:px-10">
       <Reveal className="technical-rule grid gap-8 pt-10 md:grid-cols-[1fr_auto] md:items-end">
         <div><p className="section-label">Resume / 2026</p><h1 className="mt-5 text-5xl font-medium tracking-[-0.045em] sm:text-7xl">{siteConfig.name}<span className="text-accent">.</span></h1><p className="mt-5 text-xl text-muted-foreground">{siteConfig.role} · {siteConfig.location}</p></div>
-        <div className="flex flex-col items-start gap-2 font-mono text-xs uppercase tracking-[0.12em] md:items-end"><a href={`mailto:${siteConfig.email}`} className="text-primary hover:underline">{siteConfig.email}</a><a href={siteConfig.social.linkedin} className="text-muted-foreground hover:text-foreground">LinkedIn</a><a href={siteConfig.social.github} className="text-muted-foreground hover:text-foreground">GitHub</a></div>
+        <div className="flex flex-col items-start gap-2 font-mono text-xs uppercase tracking-[0.12em] md:items-end"><a href="/resume.pdf" download className="text-primary hover:underline">Download PDF</a><a href={`mailto:${siteConfig.email}`} className="text-primary hover:underline">{siteConfig.email}</a><a href={siteConfig.social.linkedin} className="text-muted-foreground hover:text-foreground">LinkedIn</a><a href={siteConfig.social.github} className="text-muted-foreground hover:text-foreground">GitHub</a></div>
       </Reveal>
 
       <Separator className="my-14" />
