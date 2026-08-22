@@ -58,21 +58,6 @@ export const projects: Project[] = [
     href: "/projects",
   },
   {
-    title: "Realtime seat reservation",
-    description: "A realtime application for reserve seat in cinema.",
-    technologies: ["Svelte", "TypeScript", "Go"],
-    status: "Open source",
-    href: "https://github.com/HesamMirzaie/realtime-seat-booking",
-  },
-  {
-    title: "Go todo app",
-    description:
-      "A basic todo app with go for learn Fiber http library and vuejs as a ui library.",
-    technologies: ["Go", "TypeScript", "Fiber", "Vue3"],
-    status: "Open source",
-    href: "https://github.com/HesamMirzaie/go-todo-app",
-  },
-  {
     title: "A multi-tenant booking system",
     description:
       "A multi-tenant booking system: users belong to organizations, book resources (rooms/equipment), with recurring bookings, approvals, waitlists, notifications, and audit logs.",
@@ -86,6 +71,37 @@ export const projects: Project[] = [
     ],
     status: "Open source",
     href: "https://github.com/HesamMirzaie/team-booking-app",
+  },
+  {
+    title: "Inventory management platform",
+    description:
+      "A full-stack inventory system with product management, stock movements, reservations, low-stock alerts, and reorder recommendations.",
+    technologies: [
+      "React",
+      "TypeScript",
+      "Express",
+      "Drizzle ORM",
+      "SQLite",
+      "React Query",
+      "Turborepo",
+    ],
+    status: "Open source",
+    href: "/projects",
+  },
+  {
+    title: "Realtime seat reservation",
+    description: "A realtime application for reserve seat in cinema.",
+    technologies: ["Svelte", "TypeScript", "Go"],
+    status: "Open source",
+    href: "https://github.com/HesamMirzaie/realtime-seat-booking",
+  },
+  {
+    title: "Go todo app",
+    description:
+      "A basic todo app with go for learn Fiber http library and vuejs as a ui library.",
+    technologies: ["Go", "TypeScript", "Fiber", "Vue3"],
+    status: "Open source",
+    href: "https://github.com/HesamMirzaie/go-todo-app",
   },
 ];
 export const experience = [
