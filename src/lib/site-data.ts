@@ -86,7 +86,7 @@ export const projects: Project[] = [
       "Turborepo",
     ],
     status: "Open source",
-    href: "/projects",
+    href: "https://github.com/HesamMirzaie/inventory-api",
   },
   {
     title: "Realtime seat reservation",
