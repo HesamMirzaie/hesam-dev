@@ -47,7 +47,7 @@ export const projects: Project[] = [
       "Core CRM workflows with multi-step, validated forms and real-time interface updates for an enterprise-scale platform.",
     technologies: ["React", "TypeScript", "Vite", "React Query", "WebSocket"],
     status: "PayamGostar",
-    href: "/projects",
+    href: "https://crm.payamgostar.com/",
   },
   {
     title: "Plannerium frontend platform",
@@ -55,7 +55,7 @@ export const projects: Project[] = [
       "A pnpm and Turborepo monorepo with a shared UI library, authentication flows, Storybook, Docker, and CI/CD support.",
     technologies: ["React", "Turborepo", "Tailwind CSS", "Storybook", "Docker"],
     status: "Plannerium",
-    href: "/projects",
+    href: "https://plannerium.com",
   },
   {
     title: "A multi-tenant booking system",
@@ -87,21 +87,6 @@ export const projects: Project[] = [
     ],
     status: "Open source",
     href: "https://github.com/HesamMirzaie/inventory-api",
-  },
-  {
-    title: "Realtime seat reservation",
-    description: "A realtime application for reserve seat in cinema.",
-    technologies: ["Svelte", "TypeScript", "Go"],
-    status: "Open source",
-    href: "https://github.com/HesamMirzaie/realtime-seat-booking",
-  },
-  {
-    title: "Go todo app",
-    description:
-      "A basic todo app with go for learn Fiber http library and vuejs as a ui library.",
-    technologies: ["Go", "TypeScript", "Fiber", "Vue3"],
-    status: "Open source",
-    href: "https://github.com/HesamMirzaie/go-todo-app",
   },
 ];
 export const experience = [
